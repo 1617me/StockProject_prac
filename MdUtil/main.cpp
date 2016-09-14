@@ -1,6 +1,8 @@
 ﻿#include <QCoreApplication>
 #include <QSqlDatabase>
+#include <QSqlQuery>
 #include <QDateTime>
+#include <string.h>
 #include <QDebug>
 #include <QFile>
 
@@ -8,15 +10,17 @@
 int main(int argc, char *argv[])
 {
 
+    system("clear");
+
     QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
-    db.setDatabaseName("md.db");
+    db.setDatabaseName("data_res/md.db");
 
     if(!db.open()){
         qDebug() << "open database error" << endl;
         return -1;
     }
 
-    QFile file("");
+    QFile file("data_res/000001_20160104.csv");
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)){
         qDebug() << "open file error" << endl;
         return -2;
@@ -51,7 +55,7 @@ int main(int argc, char *argv[])
                     l.at(3).toDouble()
                 );
         // 拼接每次的 sql 插入的内容
-        strcat(sql, tem_sql);
+        strcat(sql, tmp_sql);
     }
 
     db.exec(sql);
