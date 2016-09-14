@@ -4,13 +4,37 @@
 #include <QSqlQuery>
 #include <QDateTime>
 #include <string.h>
+#include <QString>
 #include <QDebug>
+#include <QList>
 #include <QFile>
 #include <QDir>
 
 #include <QDate>
+void scanDir(QDir dir, QList<QString> &con_path)
+{
+    dir.setNameFilters(QStringList("*.csv"));
+    dir.setFilter(QDir::Files | QDir::NoDotAndDotDot | QDir::NoSymLinks);
 
-int main(int argc, char *argv[])
+//    qDebug() << "Scanning: " << dir.path();
+
+    QStringList fileList = dir.entryList();
+    for (int i=0; i<fileList.count(); i++)
+    {
+//        qDebug() << "Found file: " << dir.path() + "/" + fileList[i];
+        con_path.push_back(QString(dir.path() + "/" + fileList[i]));
+
+    }
+
+    dir.setFilter(QDir::AllDirs | QDir::NoDotAndDotDot | QDir::NoSymLinks);
+    QStringList dirList = dir.entryList();
+    for (int i=0; i<dirList.size(); ++i)
+    {
+        QString newPath = QString("%1/%2").arg(dir.absolutePath()).arg(dirList.at(i));
+        scanDir(QDir(newPath), con_path);
+    }
+}
+int main()
 {
 
     system("clear");
@@ -23,16 +47,16 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    QDir res_dir("./data_res/real_data/");
-    QDirIterator itr(res_dir);
-    int i = 0;
-    while(itr.hasNext()){
-        QString file_path = itr.next();
-        qDebug() << file_path << endl;
-        if ( file_path == "./data_res/real_data/." || file_path == "./data_res/real_data/.."){
-            qDebug() << "continue" << endl;
-            continue;
-        }
+    QDir res_dir("./data_res/data");
+    QList<QString> data_path;
+    scanDir(res_dir, data_path);
+    QString file_path;
+    QList<QString>::Iterator itr = data_path.begin();
+    // 计数
+     int count = 0;
+    for(; itr != data_path.end(); ++itr) {
+//        qDebug() << *itr << endl;
+        file_path = *itr;
         QFile file(file_path);
         if (!file.open(QIODevice::ReadOnly | QIODevice::Text)){
             qDebug() << "open file error" << endl;
@@ -51,7 +75,7 @@ int main(int argc, char *argv[])
             QDateTime stamp = QDateTime::fromString(l.at(2), "yyyy-MM-dd HH:mm:ss");
 
             if (!flag){
-                //  插入的insert 头部分
+
                 sql->sprintf("insert into md values(%d,%d,'%.4f')",
                         l.at(1).toInt(),
                         stamp.toTime_t(),
@@ -72,14 +96,13 @@ int main(int argc, char *argv[])
         }
 
         // 执行语句
-        qDebug() << "插入..... 啊" << i++ << endl;
+        qDebug() << "插入..... 啊" << count++ << endl;
         db.exec(*sql);
         qDebug() << "完成.." << endl;
         file.close();
         delete sql;
 
     }
-
     db.close();
 
     return 0;
