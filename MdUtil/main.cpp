@@ -43,43 +43,44 @@ bool openDB(const QString &driver, const QString &path, QSqlDatabase &db){
 
 /* merge strings */
 int merge_sql_string(QString &file_path, QString *sql){
-        QFile file(file_path);
-        if (!file.open(QIODevice::ReadOnly | QIODevice::Text)){
-            qDebug() << "open file error" << endl;
-            return -2;
-        }
+    QFile file(file_path);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)){
+        qDebug() << "open file error" << endl;
+        return -2;
+    }
 
-        file.readLine();
-        int flag = 0;
-        while(!file.atEnd()){
-            QByteArray line = file.readLine();
-            QStringList l = QString(line).split(',');
-            // 如果 l 的大小等于28 的时候继续执行, 如果不等于28的时候,则输出 l.size() == 28;
-            Q_ASSERT(l.size() == 28);
-            QDateTime stamp = QDateTime::fromString(l.at(2), "yyyy-MM-dd HH:mm:ss");
+    file.readLine();
+    int flag = 0;
+    while(!file.atEnd()){
+        QByteArray line = file.readLine();
+        QStringList l = QString(line).split(',');
+        // 如果 l 的大小等于28 的时候继续执行, 如果不等于28的时候,则输出 l.size() == 28;
+        Q_ASSERT(l.size() == 28);
+        QDateTime stamp = QDateTime::fromString(l.at(2), "yyyy-MM-dd HH:mm:ss");
 
-            if (!flag){
+        if (!flag){
 
-                sql->sprintf("insert into md values(%d,%d,'%.4f')",
-                        l.at(1).toInt(),
-                        stamp.toTime_t(),
-                        l.at(3).toDouble()
-                        );
-                flag = 1;
-                continue;
-            }
-            // 临时 buffer
-            QString part_sql;
-            part_sql.sprintf(",(%d,%d,'%.4f')",
-                        l.at(1).toInt(),
-                        stamp.toTime_t(),
-                        l.at(3).toDouble()
+            sql->sprintf("insert into md values(%d,%d,'%.4f')",
+                    l.at(1).toInt(),
+                    stamp.toTime_t(),
+                    l.at(3).toDouble()
                     );
-            // 拼接每次的 sql 插入的内容
-            sql->append(part_sql);
+            flag = 1;
+            continue;
         }
-        file.close();
-        return 0;
+        // 临时 buffer
+        QString part_sql;
+        part_sql.sprintf(",(%d,%d,'%.4f')",
+                    l.at(1).toInt(),
+                    stamp.toTime_t(),
+                    l.at(3).toDouble()
+                );
+        // 拼接每次的 sql 插入的内容
+        sql->append(part_sql);
+    }
+    sql-
+    file.close();
+    return 0;
 }
 
 /* 1. 导入数据库 */
@@ -100,6 +101,7 @@ void import_database(){
     QList<QString>::Iterator itr = data_path.begin();
 
     int count = 0;
+    /* 使用迭代器遍历数据路径 list 拼接字符串sql 语句,并执行 */
     for(; itr != data_path.end(); ++itr) {
         file_path = *itr;
 
